@@ -1,0 +1,9 @@
+__pycache__/
+db_data/
+node_modules/
+venv/
+.env.local
+.idea/
+.vscode/
+__pycache__/
+*.pyc

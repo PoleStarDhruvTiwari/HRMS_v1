@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Database
+  db:
+    image: postgres:15-alpine
+    container_name: hrms_db_prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-appdb}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    env_file:
+      - .env.production
+    networks:
+      - hrms_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Backend Application
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: hrms_backend_prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-appdb}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_EXPIRE_MINUTES: ${ACCESS_EXPIRE_MINUTES:-15}
+      REFRESH_EXPIRE_DAYS: ${REFRESH_EXPIRE_DAYS:-15}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      DEBUG: ${DEBUG:-False}
+      SECURE_COOKIES: ${SECURE_COOKIES:-True}
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      ENVIRONMENT: production
+    volumes:
+      - uploads_prod:/app/uploads
+      - logs_prod:/app/logs
+    env_file:
+      - .env.production
+    networks:
+      - hrms_network
+    command: ["/bin/bash", "docker/start.sh"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: hrms_nginx_prod
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - hrms_network
+
+networks:
+  hrms_network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  uploads_prod:
+  logs_prod:

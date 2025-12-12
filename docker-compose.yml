@@ -1,0 +1,77 @@
+﻿version: '3.8'
+
+services:
+  # Database
+  db:
+    image: postgres:15-alpine
+    container_name: hrms_db_v1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdbv1
+    volumes:
+      - postgres_data_v2:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend (FastAPI)
+  backend:
+    build: ./backend
+    container_name: hrms_backend_v1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/appdbv1
+      GOOGLE_CLIENT_ID: 60209345033-dagb9pvr7maru9uq13i7ntoj4p513ls5.apps.googleusercontent.com
+      JWT_SECRET: super-secret-change-me
+      ACCESS_EXPIRE_MINUTES: 15
+      REFRESH_EXPIRE_DAYS: 15
+      FRONTEND_ORIGIN: http://localhost:3000
+      DEBUG: "True"
+      SECURE_COOKIES: "False"
+      LOG_LEVEL: "INFO"
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/uploads:/app/uploads
+
+  # Frontend (React + Nginx)
+  frontend:
+    build: ./frontend
+    container_name: hrms_frontend_v1
+    restart: unless-stopped
+    
+    network_mode: host  # ✅ ADD THIS - Allows access to localhost:8001
+
+    # No ports mapping needed with host network
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    environment:
+      
+      REACT_APP_API_URL: http://localhost:8001
+      REACT_APP_GOOGLE_CLIENT_ID: 60209345033-dagb9pvr7maru9uq13i7ntoj4p513ls5.apps.googleusercontent.com
+
+  # Adminer (Database GUI)
+  adminer:
+    image: adminer
+    container_name: hrms_adminer_v2
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8081:8080"
+
+volumes:
+  postgres_data_v2:
