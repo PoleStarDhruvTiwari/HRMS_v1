@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Create environment config for React
+cat > /app/build/env-config.js <<EOF
+window.env = {
+  REACT_APP_API_URL: "${REACT_APP_API_URL:-http://localhost:8001}",
+  REACT_APP_GOOGLE_CLIENT_ID: "${REACT_APP_GOOGLE_CLIENT_ID:-60209345033-dagb9pvr7maru9uq13i7ntoj4p513ls5.apps.googleusercontent.com}"
+};
+EOF
+
+# Start serve
+exec serve -s build -l 3000

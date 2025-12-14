@@ -1,235 +1,194 @@
-﻿// components/Login.js - Enhanced Version
-
-import React, { useState, useEffect } from "react";
-import { GoogleLogin } from "@react-oauth/google";
-import { useNavigate, useLocation } from "react-router-dom";
-import { authAPI, setAccessToken } from "../services/api";
-import { FcGoogle } from "react-icons/fc";
-import { FaBuilding, FaUsers, FaChartLine } from "react-icons/fa";
+﻿import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { authAPI, setAccessToken } from '../services/api';
 
 const Login = () => {
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [debugInfo, setDebugInfo] = useState({});
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || "/dashboard";
-
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      navigate(from, { replace: true });
-    }
-  }, [navigate, from]);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      setError("");
       setLoading(true);
+      setError('');
+      setSuccess('');
+      setDebugInfo({});
+
+      console.log('=== LOGIN START ===');
+      console.log('Google credential received:', credentialResponse.credential ? 'Yes' : 'No');
+      
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received from Google');
+      }
+
+      console.log('Making request to backend...');
+      console.log('Backend URL:', process.env.REACT_APP_API_URL);
       
       const response = await authAPI.googleLogin(credentialResponse.credential);
-      
+      console.log('Backend response received:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      });
+
       // Save access token
-      if (response.data.tokens?.access_token) {
-        setAccessToken(response.data.tokens.access_token);
-      } else if (response.data.access_token) {
-        setAccessToken(response.data.access_token);
+      const accessToken = response.data?.tokens?.access_token || response.data?.access_token;
+      if (accessToken) {
+        setAccessToken(accessToken);
+        console.log('Access token saved:', accessToken.substring(0, 50) + '...');
+      } else {
+        console.warn('No access token in response');
       }
-      
+
       // Save user data
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+      if (response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('User data saved:', response.data.user.email);
+      }
+
+      // Set debug info for display
+      setDebugInfo({
+        backendUrl: process.env.REACT_APP_API_URL,
+        hasToken: !!accessToken,
+        hasUser: !!response.data?.user,
+        cookies: document.cookie ? 'Present' : 'None'
+      });
+
+      setSuccess('Login successful! Redirecting to dashboard...');
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+
+    } catch (err) {
+      console.error('=== LOGIN ERROR ===', err);
+      
+      let errorMessage = 'Login failed. Please try again.';
+      let debugDetails = {};
+      
+      if (err.response) {
+        // Server responded with error
+        errorMessage = err.response.data?.detail || 
+                       err.response.data?.message || 
+                       `Server error: ${err.response.status}`;
+        debugDetails = {
+          status: err.response.status,
+          data: err.response.data,
+          headers: err.response.headers
+        };
+        console.log('Server response:', err.response.data);
+      } else if (err.request) {
+        // No response received
+        errorMessage = 'No response from server. Check if backend is running.';
+        debugDetails = { request: 'No response received' };
+        console.log('No response received');
+      } else {
+        // Other errors
+        errorMessage = err.message || errorMessage;
+        debugDetails = { error: err.message };
       }
       
-      // Redirect to intended page or dashboard
-      navigate(from, { replace: true });
-    } catch (err) {
-      console.error("Login error:", err);
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(errorMessage);
+      setDebugInfo(debugDetails);
+      
     } finally {
       setLoading(false);
+      console.log('=== LOGIN END ===');
     }
   };
 
   const handleGoogleError = () => {
-    setError("Google login failed. Please try again.");
+    setError('Google login failed. Please try again.');
+    setDebugInfo({ googleError: 'Google OAuth error' });
   };
 
   return (
-    <div className="login-container" style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '20px'
+    <div className="container" style={{ 
+      maxWidth: '500px', 
+      margin: '50px auto',
+      padding: '40px 20px'
     }}>
-      <div style={{
-        display: 'flex',
-        maxWidth: '1000px',
-        width: '100%',
-        background: 'white',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-      }}>
-        {/* Left Side - Branding & Features */}
-        <div style={{
-          flex: 1,
-          background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-          color: 'white',
-          padding: '60px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <div style={{ marginBottom: '40px' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '20px'
-            }}>
-              <FaBuilding size={32} />
-              <h1 style={{ fontSize: '28px', fontWeight: '700' }}>HRMS Pro</h1>
-            </div>
-            <p style={{
-              fontSize: '16px',
-              opacity: '0.9',
-              lineHeight: '1.6'
-            }}>
-              Enterprise-grade Human Resource Management System
-            </p>
-          </div>
-          
-          <div style={{ marginTop: '40px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>Key Features</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {[
-                { icon: <FaUsers />, text: 'Comprehensive Employee Management' },
-                { icon: <FaChartLine />, text: 'Real-time Analytics & Reporting' },
-                { icon: <FaBuilding />, text: 'Department & Role Management' }
-              ].map((feature, index) => (
-                <div key={index} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '50%',
-                    padding: '8px'
-                  }}>
-                    {feature.icon}
-                  </div>
-                  <span>{feature.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="card">
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ marginBottom: '10px', color: '#333' }}>Google Auth Test</h1>
+          <p style={{ color: '#666' }}>Test Google authentication and token generation</p>
         </div>
-        
-        {/* Right Side - Login Form */}
-        <div style={{
-          flex: 1,
-          padding: '60px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '8px'
-            }}>
-              Welcome Back
-            </h2>
-            <p style={{
-              color: '#64748b',
-              fontSize: '16px'
-            }}>
-              Sign in to access your HRMS dashboard
-            </p>
+
+        {error && (
+          <div className="alert alert-error">
+            <strong>Error:</strong> {error}
           </div>
-          
-          {error && (
-            <div style={{
-              background: '#fee2e2',
-              color: '#dc2626',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span>⚠</span>
-              <span>{error}</span>
+        )}
+
+        {success && (
+          <div className="alert alert-success">
+            {success}
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="filled_blue"
+              size="large"
+              shape="rectangular"
+              width="300"
+              text="signin_with"
+              logo_alignment="center"
+            />
+          </div>
+
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <div className="spinner"></div>
+              <span>Authenticating...</span>
             </div>
           )}
-          
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '20px'
-          }}>
-            <div style={{ width: '100%', maxWidth: '320px' }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                theme="filled_blue"
-                size="large"
-                shape="rectangular"
-                width="100%"
-                text="signin_with"
-                logo_alignment="center"
-              />
-            </div>
-            
-            {loading && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#64748b'
-              }}>
-                <div className="loading-spinner"></div>
-                <span>Authenticating...</span>
-              </div>
-            )}
-            
-            <div style={{
-              textAlign: 'center',
-              marginTop: '30px',
-              paddingTop: '30px',
-              borderTop: '1px solid #e2e8f0',
-              width: '100%'
+        </div>
+
+        {/* Debug Information */}
+        {Object.keys(debugInfo).length > 0 && (
+          <div className="card" style={{ marginTop: '20px', background: '#f8f9fa' }}>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>Debug Info:</h4>
+            <pre style={{ 
+              fontSize: '12px', 
+              color: '#666',
+              background: '#fff',
+              padding: '10px',
+              borderRadius: '4px',
+              overflow: 'auto',
+              maxHeight: '200px'
             }}>
-              <p style={{
-                color: '#64748b',
-                fontSize: '14px',
-                lineHeight: '1.5'
-              }}>
-                <strong>Note:</strong> Use your company Google account to sign in.
-                First-time users will be automatically registered.
-              </p>
-            </div>
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
           </div>
-          
-          <div style={{
-            marginTop: '40px',
-            textAlign: 'center',
-            color: '#64748b',
-            fontSize: '14px'
-          }}>
-            <p>Need help? Contact your system administrator</p>
-            <p style={{ marginTop: '8px', opacity: '0.7' }}>
-              HRMS Pro v1.0 • Secure Enterprise Platform
-            </p>
-          </div>
+        )}
+
+        <div className="alert alert-info">
+          <strong>Configuration:</strong>
+          <ul style={{ marginTop: '10px', paddingLeft: '20px' }}>
+            <li>Backend URL: {process.env.REACT_APP_API_URL || 'Not set'}</li>
+            <li>Google Client ID: {process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Set ✓' : 'Not set ✗'}</li>
+            <li>Cookies: {document.cookie ? 'Present' : 'None'}</li>
+          </ul>
+        </div>
+
+        <div style={{ 
+          marginTop: '30px', 
+          paddingTop: '20px', 
+          borderTop: '1px solid #e2e8f0',
+          textAlign: 'center',
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          <p><strong>Docker Setup:</strong> network_mode: host enabled</p>
+          <p>Backend should be accessible at: http://localhost:8001</p>
         </div>
       </div>
     </div>

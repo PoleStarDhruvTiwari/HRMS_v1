@@ -1,3 +1,0 @@
-"""
-Employee Profile API module.
-"""

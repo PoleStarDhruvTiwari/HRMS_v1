@@ -1,9 +1,10 @@
+# app/auth/routes.py
 import logging
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
-from app.database.session import SessionLocal  # ✅ Import SessionLocal, not get_db
-from .repositories import UserRepository
+from app.database.session import SessionLocal
+from .repositories import UserRepository, SessionRepository
 from .services import AuthService
 from .schemas import (
     GoogleTokenRequest,
@@ -20,7 +21,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
-# FIXED: Dependency injection
 def get_db() -> Session:
     """FastAPI dependency for database session."""
     db = SessionLocal()
@@ -38,13 +38,21 @@ def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
 
-def get_auth_service(user_repo: UserRepository = Depends(get_user_repository)) -> AuthService:
-    return AuthService(user_repo)
+def get_session_repository(db: Session = Depends(get_db)) -> SessionRepository:
+    return SessionRepository(db)
+
+
+def get_auth_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    session_repo: SessionRepository = Depends(get_session_repository)
+) -> AuthService:
+    return AuthService(user_repo, session_repo)
 
 
 @router.post("/google-login", response_model=LoginResponse)
 async def google_login(
-    request: GoogleTokenRequest,
+    request: Request,
+    token_request: GoogleTokenRequest,
     response: Response,
     auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -56,7 +64,17 @@ async def google_login(
     - Sets: HTTP-only refresh token cookie
     """
     logger.info("Google login endpoint called")
-    return auth_service.google_login(request.token, response)
+    
+    # Extract device info from headers (optional)
+    device_id = request.headers.get("X-Device-ID")
+    device_type = request.headers.get("X-Device-Type")
+    
+    return auth_service.google_login(
+        token_request.token, 
+        response,
+        device_id=device_id,
+        device_type=device_type
+    )
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -89,7 +107,25 @@ async def logout(
     - Returns: Success message
     """
     logger.info("Logout endpoint called")
-    return auth_service.logout(request, response)
+    result = auth_service.logout(request, response)
+    return LogoutResponse(message=result["message"])
+
+
+@router.post("/logout-all", response_model=LogoutResponse)
+async def logout_all(
+    request: Request,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """
+    Logout user from all devices/sessions.
+    
+    - Clears: All sessions from database and cookie
+    - Returns: Success message
+    """
+    logger.info("Logout all endpoint called")
+    result = auth_service.logout_all(request, response)
+    return LogoutResponse(message=result["message"])
 
 
 @router.get("/me", response_model=UserResponse)
@@ -105,3 +141,18 @@ async def get_current_user(
     """
     logger.info("Get current user endpoint called")
     return auth_service.get_current_user(request)
+
+
+@router.get("/sessions")
+async def get_user_sessions(
+    request: Request,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """
+    Get all active sessions for current user.
+    
+    - Requires: Bearer token in Authorization header
+    - Returns: List of active sessions
+    """
+    logger.info("Get user sessions endpoint called")
+    return auth_service.get_user_sessions(request)

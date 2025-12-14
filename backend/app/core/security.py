@@ -45,19 +45,25 @@ class SecurityService:
             )
     
     @staticmethod
-    def create_access_token(subject: str) -> Tuple[str, int]:
-        """Create JWT access token."""
-        logger.debug(f"Creating access token for subject: {subject}")
+    def create_access_token(subject: str, user_id: Optional[int] = None) -> Tuple[str, int]:
+        """Create JWT access token with user_id."""
+        logger.debug(f"Creating access token for subject: {subject}, user_id: {user_id}")
         
         try:
             expire = datetime.now(timezone.utc) + timedelta(
                 minutes=settings.ACCESS_EXPIRE_MINUTES
             )
+            
+            # Base payload
             payload = {
                 "sub": subject,
                 "exp": expire,
                 "type": "access"
             }
+            
+            # Add user_id if provided
+            if user_id is not None:
+                payload["user_id"] = user_id
             
             token = jwt.encode(
                 payload,
@@ -78,19 +84,25 @@ class SecurityService:
             )
     
     @staticmethod
-    def create_refresh_token(subject: str) -> str:
-        """Create JWT refresh token."""
-        logger.debug(f"Creating refresh token for subject: {subject}")
+    def create_refresh_token(subject: str, user_id: Optional[int] = None) -> str:
+        """Create JWT refresh token with user_id."""
+        logger.debug(f"Creating refresh token for subject: {subject}, user_id: {user_id}")
         
         try:
             expire = datetime.now(timezone.utc) + timedelta(
                 days=settings.REFRESH_EXPIRE_DAYS
             )
+            
+            # Base payload
             payload = {
                 "sub": subject,
                 "exp": expire,
                 "type": "refresh"
             }
+            
+            # Add user_id if provided
+            if user_id is not None:
+                payload["user_id"] = user_id
             
             token = jwt.encode(
                 payload,
@@ -109,7 +121,7 @@ class SecurityService:
             )
     
     @staticmethod
-    def verify_local_token(token: str) -> Dict[str, Any]:
+    def verify_local_token(token: str, require_user_id: bool = False) -> Dict[str, Any]:
         """Verify locally issued JWT token."""
         logger.debug(f"Verifying local token: {token[:20]}...")
         
@@ -119,7 +131,25 @@ class SecurityService:
                 settings.JWT_SECRET,
                 algorithms=[settings.JWT_ALGORITHM]
             )
-            logger.debug(f"Token verified for subject: {payload.get('sub')}")
+            
+            # Validate token type
+            token_type = payload.get('type')
+            if token_type not in ['access', 'refresh']:
+                logger.warning(f"Invalid token type: {token_type}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type"
+                )
+            
+            # Check if user_id is required and present
+            if require_user_id and 'user_id' not in payload:
+                logger.warning("Token missing required user_id field")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token missing required user information"
+                )
+            
+            logger.debug(f"Token verified for subject: {payload.get('sub')}, user_id: {payload.get('user_id')}")
             return payload
             
         except JWTError as e:
@@ -162,6 +192,29 @@ class SecurityService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Authorization header format"
             )
+    
+    @staticmethod
+    def extract_user_id_from_token(token: str) -> Optional[int]:
+        """Extract user_id from a JWT token."""
+        try:
+            payload = SecurityService.verify_local_token(token)
+            user_id = payload.get('user_id')
+            
+            if user_id is not None:
+                return int(user_id)
+            return None
+            
+        except (HTTPException, ValueError):
+            return None
+    
+    @staticmethod
+    def extract_email_from_token(token: str) -> Optional[str]:
+        """Extract email from a JWT token."""
+        try:
+            payload = SecurityService.verify_local_token(token)
+            return payload.get('sub')
+        except HTTPException:
+            return None
 
 
 # Singleton instance

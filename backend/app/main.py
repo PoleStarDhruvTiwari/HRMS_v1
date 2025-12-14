@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.shared.middleware import setup_middleware
 from app.shared.exceptions import setup_exception_handlers
 from app.apis.auth.routers import router as auth_router
-from app.apis.employees_profile.routers import router as employees_router
+from app.apis.users.routers import router as users_router
 
 
 # Initialize logger
@@ -41,7 +41,7 @@ setup_exception_handlers(app)
 
 # Include routers
 app.include_router(auth_router)
-app.include_router(employees_router)
+app.include_router(users_router)
 
 
 @app.get("/")

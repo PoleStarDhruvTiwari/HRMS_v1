@@ -11,6 +11,6 @@ Base = declarative_base()
 def init_models():
     """Initialize all database models."""
     from app.apis.auth import models as auth_models
-    from app.apis.employees_profile import models as employee_models
+    from app.apis.users import models as user_models
     
     logger.info("Database models initialized")

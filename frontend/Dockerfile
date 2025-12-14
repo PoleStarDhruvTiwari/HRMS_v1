@@ -26,9 +26,13 @@ WORKDIR /app
 # Copy built app
 COPY --from=builder /app/build ./build
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh .
+
 # Install serve
-RUN npm install -g serve
+RUN npm install -g serve && \
+    chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["serve", "-s", "build", "-l", "3000"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
