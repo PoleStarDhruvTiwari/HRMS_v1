@@ -8,6 +8,7 @@ from app.database.base import Base
 logger = logging.getLogger(__name__)
 
 
+
 class ExistingUser(Base):
     """Existing user model (mapping to your users table)."""
     
@@ -24,7 +25,7 @@ class ExistingUser(Base):
     designation_id = Column(BigInteger)
     date_of_joining = Column(Date)
     date_of_leaving = Column(Date, nullable=True)
-    status = Column(String(20))
+    status = Column(String(20), default="active")
     reporting_level1_id = Column(BigInteger, nullable=True)
     reporting_level2_id = Column(BigInteger, nullable=True)
     skills = Column(JSON, nullable=True)

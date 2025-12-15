@@ -138,6 +138,54 @@ async def create_user(
     return user_service.create_user(user_data, request)
 
 
+
+@router.get("/me/profile", response_model=UserProfileResponse)
+async def get_my_profile(
+    request: Request,
+    user_service: UserService = Depends(get_user_service)
+):
+    """
+    Get current user's profile.
+    - Returns: Current user's profile with extended information
+    """
+
+    logger.info("📥 /me/profile endpoint called")
+
+    # Log request metadata
+    logger.info(
+        "Request received | method=%s | path=%s | client=%s",
+        request.method,
+        request.url.path,
+        request.client.host if request.client else "unknown"
+    )
+
+    # Extract Authorization header
+    auth_header = request.headers.get("Authorization")
+    logger.info(
+        "Authorization header present: %s",
+        "YES" if auth_header else "NO"
+    )
+
+    # Extract user ID from token
+    logger.info("Extracting user ID from access token")
+    access_token = user_service.get_current_user_id(request)
+    logger.info("User ID extracted successfully | user_id=%s", access_token)
+
+    # Fetch user profile
+    logger.info("Fetching user profile from service | user_id=%s", access_token)
+    profile = user_service.get_user_profile(access_token, request)
+
+    logger.info(
+        "User profile fetched successfully | user_id=%s",
+        access_token
+    )
+
+    logger.info("📤 /me/profile endpoint completed successfully")
+
+    return profile
+
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,
@@ -255,23 +303,23 @@ async def get_user_counts(
     return user_service.get_user_counts(request)
 
 
-@router.get("/me/profile", response_model=UserProfileResponse)
-async def get_my_profile(
-    request: Request,
-    user_service: UserService = Depends(get_user_service)
-):
-    """
-    Get current user's profile.
+# @router.get("/me/profile", response_model=UserProfileResponse)
+# async def get_my_profile(
+#     request: Request,
+#     user_service: UserService = Depends(get_user_service)
+# ):
+#     """
+#     Get current user's profile.
     
-    - Returns: Current user's profile with extended information
-    """
-    logger.info("Get my profile endpoint called")
+#     - Returns: Current user's profile with extended information
+#     """
+#     logger.info("Get my profile endpoint called")
     
-    # Extract current user ID from token
-    auth_header = request.headers.get("Authorization")
-    access_token = user_service.get_current_user_id(request)
+#     # Extract current user ID from token
+#     auth_header = request.headers.get("Authorization")
+#     access_token = user_service.get_current_user_id(request)
     
-    return user_service.get_user_profile(access_token, request)
+#     return user_service.get_user_profile(access_token, request)
 
 
 @router.put("/me/update")

@@ -8,8 +8,7 @@ from app.shared.middleware import setup_middleware
 from app.shared.exceptions import setup_exception_handlers
 from app.apis.auth.routers import router as auth_router
 from app.apis.users.routers import router as users_router
-
-
+from app.apis.employee_availability.routers import router as employee_availability_router
 # Initialize logger
 logger = logging.getLogger(__name__)
 
@@ -42,6 +41,7 @@ setup_exception_handlers(app)
 # Include routers
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(employee_availability_router)
 
 
 @app.get("/")

@@ -11,6 +11,13 @@ from .schemas import (
     UserProfileResponse, UserFilter, UserBulkUpdate
 )
 
+MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5 MB
+ALLOWED_RESUME_TYPES = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -319,53 +326,172 @@ class UserService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error"
             )
-    
-    def update_user_resume(self, user_id: int, resume_file: UploadFile, request) -> Dict[str, Any]:
-        """Upload/update user resume."""
-        logger.info(f"Updating resume for user: {user_id}")
+    # async def update_user_resume(self, user_id: int, resume_file: UploadFile, request) -> Dict[str, Any]:
+    #     """Upload/update user resume."""
+    #     logger.info(f"Updating resume for user: {user_id}")
         
-        try:
-            # Get current user for audit
-            current_user_id = self.get_current_user_id(request)
+    #     try:
+    #         # Get current user for audit
+    #         current_user_id = self.get_current_user_id(request)
             
-            # Get user
+    #         # Get user
+    #         user = self.user_repo.get_by_id(user_id)
+    #         if not user:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_404_NOT_FOUND,
+    #                 detail="User not found"
+    #             )
+            
+    #         # Check permissions (user can update own resume, admin can update any)
+    #         if user_id != current_user_id:
+    #             self.verify_admin_access(current_user_id)
+            
+    #         # Read file content
+    #         file_content = await resume_file.read()
+            
+    #         # Update user resume
+    #         update_data = {
+    #             "resume": file_content.decode('utf-8')  # Convert to string for Text field
+    #         }
+            
+    #         updated_user = self.user_repo.update(user, update_data, updated_by=current_user_id)
+            
+    #         return {
+    #             "message": "Resume updated successfully",
+    #             "file_name": resume_file.filename,
+    #             "file_type": resume_file.content_type,
+    #             "file_size": len(file_content),
+    #             "user_id": user_id
+    #         }
+            
+    #     except HTTPException:
+    #         raise
+    #     except Exception as e:
+    #         logger.exception(f"Error updating resume for user {user_id}: {str(e)}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail="Internal server error"
+    #         )
+
+    async def update_user_resume(self,user_id: int,resume_file: UploadFile,request) -> Dict[str, Any]:
+    # """
+    # Upload or update a user's resume.
+    # Resume is stored as BYTEA in PostgreSQL.
+    # """
+
+        logger.info("Updating resume | target_user_id=%s", user_id)
+
+        try:
+            # -----------------------------
+            # Auth / Audit
+            # -----------------------------
+            current_user_id = self.get_current_user_id(request)
+            logger.info("Authenticated user | user_id=%s", current_user_id)
+
+            # -----------------------------
+            # Fetch user
+            # -----------------------------
             user = self.user_repo.get_by_id(user_id)
             if not user:
+                logger.warning("User not found | user_id=%s", user_id)
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="User not found"
                 )
-            
-            # Check permissions (user can update own resume, admin can update any)
+
+            # -----------------------------
+            # Authorization
+            # -----------------------------
             if user_id != current_user_id:
+                logger.info(
+                    "Permission check | actor=%s | target=%s",
+                    current_user_id,
+                    user_id
+                )
                 self.verify_admin_access(current_user_id)
-            
-            # Read file content
-            file_content = await resume_file.read()
-            
-            # Update user resume
+
+            # -----------------------------
+            # File validation
+            # -----------------------------
+            if resume_file.content_type not in ALLOWED_RESUME_TYPES:
+                logger.warning(
+                    "Invalid resume type | type=%s | user_id=%s",
+                    resume_file.content_type,
+                    user_id
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Unsupported resume file format"
+                )
+
+            # -----------------------------
+            # Read file (bytes)
+            # -----------------------------
+            file_content: bytes = await resume_file.read()
+
+            if not file_content:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Uploaded file is empty"
+                )
+
+            if len(file_content) > MAX_RESUME_SIZE:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Resume file size exceeds 5 MB limit"
+                )
+
+            logger.info(
+                "Resume file validated | name=%s | size=%d bytes",
+                resume_file.filename,
+                len(file_content)
+            )
+
+            # -----------------------------
+            # Persist (BYTEA)
+            # -----------------------------
             update_data = {
-                "resume": file_content.decode('utf-8')  # Convert to string for Text field
+                "resume": file_content  # ✅ CORRECT for BYTEA
             }
-            
-            updated_user = self.user_repo.update(user, update_data, updated_by=current_user_id)
-            
+
+            self.user_repo.update(
+                user,
+                update_data,
+                updated_by=current_user_id
+            )
+
+            logger.info(
+                "Resume updated successfully | user_id=%s | updated_by=%s",
+                user_id,
+                current_user_id
+            )
+
+            # -----------------------------
+            # Response
+            # -----------------------------
             return {
                 "message": "Resume updated successfully",
+                "user_id": user_id,
                 "file_name": resume_file.filename,
                 "file_type": resume_file.content_type,
-                "file_size": len(file_content),
-                "user_id": user_id
+                "file_size": len(file_content)
             }
-            
+
         except HTTPException:
             raise
+
         except Exception as e:
-            logger.exception(f"Error updating resume for user {user_id}: {str(e)}")
+            logger.exception(
+                "Unexpected error while updating resume | user_id=%s | error=%s",
+                user_id,
+                str(e)
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error"
             )
+
+    # above code is created by chatgpt
     
     def get_user_counts(self, request) -> Dict[str, Any]:
         """Get user statistics."""

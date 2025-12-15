@@ -304,6 +304,7 @@ class AuthService:
         try:
             # Get refresh token from cookie
             refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)
+            logger.info(refresh_token)
             
             if refresh_token:
                 # Delete session by refresh token
