@@ -37,9 +37,9 @@ class EmployeeAvailability(Base):
     attendance_id = Column(BigInteger, primary_key=True, index=True)
     employee_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, index=True)
     attendance_date = Column(Date, nullable=False, index=True)
-    day_type = Column(SQLEnum(DayTypeEnum), nullable=False, default=DayTypeEnum.WORKDAY)
-    first_half = Column(SQLEnum(HalfStatusEnum), nullable=False, default=HalfStatusEnum.PRESENT)
-    second_half = Column(SQLEnum(HalfStatusEnum), nullable=False, default=HalfStatusEnum.PRESENT)
+    day_type = Column(SQLEnum(DayTypeEnum, values_callable=lambda enum: [e.value for e in enum],native_enum=True ), nullable=False, default=DayTypeEnum.WORKDAY.value)
+    first_half = Column(SQLEnum(HalfStatusEnum, values_callable=lambda enum: [e.value for e in enum],native_enum=True ), nullable=False, default=HalfStatusEnum.PRESENT.value)
+    second_half = Column(SQLEnum(HalfStatusEnum, values_callable=lambda enum: [e.value for e in enum],native_enum=True ), nullable=False, default=HalfStatusEnum.PRESENT.value)
     check_in_time = Column(DateTime(timezone=True), nullable=True)
     check_in_location_id = Column(BigInteger, ForeignKey('offices.office_id'), nullable=True)
     check_out_time = Column(DateTime(timezone=True), nullable=True)
@@ -48,7 +48,7 @@ class EmployeeAvailability(Base):
     shift_id = Column(BigInteger, ForeignKey('shifts.shift_id'), nullable=False)
     leave_applied_by_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=True)
     leave_applied_at = Column(DateTime(timezone=True), nullable=True)
-    leave_status = Column(SQLEnum(LeaveStatusEnum), nullable=True, default=LeaveStatusEnum.PENDING)
+    leave_status = Column(SQLEnum(LeaveStatusEnum, values_callable=lambda enum: [e.value for e in enum],native_enum=True ), nullable=True, default=LeaveStatusEnum.PENDING)
     leave_approved_by_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=True)
     leave_approved_at = Column(DateTime(timezone=True), nullable=True)
     comment_json = Column(JSON, nullable=True, default={})
@@ -57,13 +57,13 @@ class EmployeeAvailability(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    employee = relationship("User", foreign_keys=[employee_id])
+    employee = relationship("ExistingUser", foreign_keys=[employee_id])
     check_in_location = relationship("Office", foreign_keys=[check_in_location_id])
     check_out_location = relationship("Office", foreign_keys=[check_out_location_id])
     shift = relationship("Shift")
-    leave_applied_by = relationship("User", foreign_keys=[leave_applied_by_id])
-    leave_approved_by = relationship("User", foreign_keys=[leave_approved_by_id])
-    updated_by = relationship("User", foreign_keys=[updated_by_id])
+    leave_applied_by = relationship("ExistingUser", foreign_keys=[leave_applied_by_id])
+    leave_approved_by = relationship("ExistingUser", foreign_keys=[leave_approved_by_id])
+    updated_by = relationship("ExistingUser", foreign_keys=[updated_by_id])
     
     def __repr__(self):
         return f"<EmployeeAvailability(attendance_id={self.attendance_id}, employee_id={self.employee_id}, date={self.attendance_date})>"
