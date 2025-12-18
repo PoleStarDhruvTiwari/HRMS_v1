@@ -1,0 +1,25 @@
+# app/apis/modules/models.py
+import logging
+from sqlalchemy import Column, Integer, String, DateTime, BigInteger, ForeignKey
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.database.base import Base
+
+logger = logging.getLogger(__name__)
+
+
+class Module(Base):
+    """Module model."""
+    
+    __tablename__ = "modules"
+    
+    module_id = Column(BigInteger, primary_key=True, index=True)
+    module_name = Column(String(100), unique=True, nullable=False, index=True)
+    updated_by = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    updater = relationship("ExistingUser", foreign_keys=[updated_by])
+    
+    def __repr__(self):
+        return f"<Module(module_id={self.module_id}, module_name={self.module_name})>"

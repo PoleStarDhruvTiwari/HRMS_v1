@@ -9,6 +9,15 @@ from app.shared.exceptions import setup_exception_handlers
 from app.apis.auth.routers import router as auth_router
 from app.apis.users.routers import router as users_router
 from app.apis.employee_availability.routers import router as employee_availability_router
+from app.apis.access_control.roles.routers import router as roles_router
+from app.apis.access_control.modules.routers import router as modules_router
+
+
+
+# In your main.py or app/__init__.py
+
+
+
 # Initialize logger
 logger = logging.getLogger(__name__)
 
@@ -42,6 +51,8 @@ setup_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(employee_availability_router)
+app.include_router(roles_router)
+app.include_router(modules_router)
 
 
 @app.get("/")
