@@ -21,7 +21,8 @@ fi
 # Start the application
 if [ "$ENVIRONMENT" = "production" ]; then
     echo "Starting in production mode with Gunicorn..."
-    exec gunicorn -c docker/gunicorn_conf.py app.main:app
+    #exec gunicorn -c docker/gunicorn_conf.py app.main:app   old line ( before prod testing 20 dec)
+    exec gunicorn -c /app/gunicorn_conf.py app.main:app
 else
     echo "Starting in development mode with Uvicorn..."
     exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

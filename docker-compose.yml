@@ -45,6 +45,37 @@ services:
       - ./backend/app:/app/app
       - ./backend/uploads:/app/uploads
 
+  #
+  # this is for the prodcution testing purpose 20 dec
+  #
+
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: docker/Dockerfile
+  #   container_name: hrms_backend_v1
+  #   restart: unless-stopped
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   environment:
+  #     ENVIRONMENT: production 
+  #     DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/appdbv1
+  #     GOOGLE_CLIENT_ID: 60209345033-dagb9pvr7maru9uq13i7ntoj4p513ls5.apps.googleusercontent.com
+  #     JWT_SECRET: super-secret-change-me
+  #     ACCESS_EXPIRE_MINUTES: 15
+  #     REFRESH_EXPIRE_DAYS: 15
+  #     FRONTEND_ORIGIN: http://localhost:3000
+  #     DEBUG: "True"
+  #     SECURE_COOKIES: "False"
+  #     LOG_LEVEL: "INFO"
+  #   ports:
+  #     - "8001:8000"
+  #   volumes:
+  #     - ./backend/app:/app/app
+  #     - ./backend/uploads:/app/uploads
+
+
   # Frontend (React + Nginx)
   frontend:
     build: ./frontend
