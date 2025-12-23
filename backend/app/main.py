@@ -11,6 +11,24 @@ from app.apis.users.routers import router as users_router
 from app.apis.employee_availability.routers import router as employee_availability_router
 from app.apis.access_control.roles.routers import router as roles_router
 from app.apis.access_control.modules.routers import router as modules_router
+# In your main.py or app/__init__.py
+from app.apis.organization.offices.routers import router as offices_router
+
+# In your main.py or app/__init__.py
+from app.apis.organization.shifts.routers  import router as shifts_router
+# In your main.py or app/__init__.py
+from app.apis.organization.teams.routers import router as teams_router
+
+# In your main.py or app/__init__.py
+from app.apis.organization.designations.routers import router as designations_router
+
+
+
+
+
+
+
+
 
 
 
@@ -53,6 +71,10 @@ app.include_router(users_router)
 app.include_router(employee_availability_router)
 app.include_router(roles_router)
 app.include_router(modules_router)
+app.include_router(offices_router)
+app.include_router(shifts_router)
+app.include_router(teams_router)
+app.include_router(designations_router)
 
 
 @app.get("/")

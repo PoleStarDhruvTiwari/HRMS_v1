@@ -35,6 +35,7 @@ class EmployeeAvailability(Base):
     __tablename__ = "employee_availability"
     
     attendance_id = Column(BigInteger, primary_key=True, index=True)
+    #syntax: Column(DataType, ForeignKey('referenced_table(postgres table name).referenced_column'))
     employee_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, index=True)
     attendance_date = Column(Date, nullable=False, index=True)
     day_type = Column(SQLEnum(DayTypeEnum, values_callable=lambda enum: [e.value for e in enum],native_enum=True ), nullable=False, default=DayTypeEnum.WORKDAY.value)
@@ -57,6 +58,7 @@ class EmployeeAvailability(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
+    # syntax: relationship("ModelName", foreign_keys=[foreign_key_column])
     employee = relationship("ExistingUser", foreign_keys=[employee_id])
     check_in_location = relationship("Office", foreign_keys=[check_in_location_id])
     check_out_location = relationship("Office", foreign_keys=[check_out_location_id])
@@ -70,29 +72,31 @@ class EmployeeAvailability(Base):
 
 
 # Optional: If you have these tables, create models for them
-class Office(Base):
-    """Office/location model."""
-    __tablename__ = "offices"
-    
-    office_id = Column(BigInteger, primary_key=True, index=True)
-    office_name = Column(String(100), nullable=False)
-    address = Column(String(500), nullable=True)
-    city = Column(String(100), nullable=True)
-    state = Column(String(100), nullable=True)
-    country = Column(String(100), nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
-class Shift(Base):
-    """Shift model."""
-    __tablename__ = "shifts"
+# class Office(Base):
+#     """Office/location model."""
+#     __tablename__ = "offices"
     
-    shift_id = Column(BigInteger, primary_key=True, index=True)
-    shift_name = Column(String(100), nullable=False)
-    start_time = Column(DateTime(timezone=True), nullable=False)
-    end_time = Column(DateTime(timezone=True), nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+#     office_id = Column(BigInteger, primary_key=True, index=True)
+#     office_name = Column(String(100), nullable=False)
+#     address = Column(String(500), nullable=True)
+#     city = Column(String(100), nullable=True)
+#     state = Column(String(100), nullable=True)
+#     country = Column(String(100), nullable=True)
+#     is_active = Column(Boolean, default=True)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+# class Shift(Base):
+#     """Shift model."""
+#     __tablename__ = "shifts"
+    
+#     shift_id = Column(BigInteger, primary_key=True, index=True)
+#     shift_name = Column(String(100), nullable=False)
+#     start_time = Column(DateTime(timezone=True), nullable=False)
+#     end_time = Column(DateTime(timezone=True), nullable=False)
+#     is_active = Column(Boolean, default=True)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
