@@ -3,10 +3,13 @@ import logging
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, BigInteger, Text, ForeignKey, Date, JSON
 from sqlalchemy.sql import func
 from app.database.base import Base
+from sqlalchemy.orm import relationship
+# In app/apis/auth/models.py
+# Add this import at the top
+from app.apis.access_control.user_permissions.models import UserPermission
 
 
 logger = logging.getLogger(__name__)
-
 
 
 class ExistingUser(Base):
@@ -41,8 +44,21 @@ class ExistingUser(Base):
     is_admin = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True), nullable=True)
     
+    # ===========================================
+    # RELATIONSHIPS
+    # ===========================================
+    
+    # Relationship to user_permissions table
+    direct_permissions = relationship(
+        "UserPermission", 
+        foreign_keys="[UserPermission.user_id]",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    
     def __repr__(self):
         return f"<ExistingUser(user_id={self.user_id}, email={self.email})>"
+    
 
 
 class UserSession(Base):

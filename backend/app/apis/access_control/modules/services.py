@@ -1,65 +1,32 @@
-# app/apis/modules/services.py
+
+# app/apis/access_control/modules/services.py
 import logging
-from typing import List, Optional
+from typing import List
 from fastapi import HTTPException, status
 
-from app.core.security import security_service
+from app.core.base_service import BaseService
 from .repositories import ModuleRepository
 from .schemas import ModuleCreate, ModuleUpdate, ModuleResponse, ModuleListResponse
 
 logger = logging.getLogger(__name__)
 
 
-class ModuleService:
+class ModuleService(BaseService):  # ✅ Inherit from BaseService
     """Service for module business logic."""
     
-    def __init__(self, module_repo: ModuleRepository):
+    def __init__(self, module_repo: ModuleRepository, db):
+        super().__init__(db)  # ✅ Call parent constructor
         self.module_repo = module_repo
-    
-    def get_current_user_id(self, request) -> int:
-        """Extract current user ID from request."""
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authorization header missing"
-            )
-        
-        access_token = security_service.extract_token_from_header(auth_header)
-        payload = security_service.verify_local_token(access_token)
-        user_id = payload.get("user_id")
-        
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
-            )
-        
-        return user_id
-    
-    def verify_admin_access(self, user_id: int):
-        """Verify user has admin privileges."""
-        from app.database.session import SessionLocal
-        from app.apis.users.repositories import UserRepository
-        
-        db = SessionLocal()
-        try:
-            user_repo = UserRepository(db)
-            user = user_repo.get_by_id(user_id)
-            if not user or not user.is_admin:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Admin access required"
-                )
-        finally:
-            db.close()
     
     def get_module(self, module_id: int, request) -> ModuleResponse:
         """Get module by ID."""
         logger.debug(f"Getting module: {module_id}")
         
         try:
-            self.get_current_user_id(request)  # Just for auth check
+            current_user_id = self.get_current_user_id(request)  # ✅ From BaseService
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.view")
             
             module = self.module_repo.get_by_id(module_id)
             if not module:
@@ -96,7 +63,10 @@ class ModuleService:
         logger.debug(f"Getting modules (skip: {skip}, limit: {limit})")
         
         try:
-            self.get_current_user_id(request)  # Just for auth check
+            current_user_id = self.get_current_user_id(request)
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.view")
             
             modules = self.module_repo.get_all(skip=skip, limit=limit)
             total = self.module_repo.get_count()
@@ -144,7 +114,9 @@ class ModuleService:
         
         try:
             current_user_id = self.get_current_user_id(request)
-            self.verify_admin_access(current_user_id)
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.create")
             
             # Convert to dict and create
             module_dict = module_data.dict()
@@ -172,7 +144,9 @@ class ModuleService:
         
         try:
             current_user_id = self.get_current_user_id(request)
-            self.verify_admin_access(current_user_id)
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.update")
             
             # Get module
             module = self.module_repo.get_by_id(module_id)
@@ -208,7 +182,9 @@ class ModuleService:
         
         try:
             current_user_id = self.get_current_user_id(request)
-            self.verify_admin_access(current_user_id)
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.delete")
             
             # Check if module exists
             module = self.module_repo.get_by_id(module_id)
@@ -242,10 +218,13 @@ class ModuleService:
         logger.debug(f"Searching modules: {search_term}")
         
         try:
-            self.get_current_user_id(request)  # Just for auth check
+            current_user_id = self.get_current_user_id(request)
+            
+            # ✅ PERMISSION CHECK ADDED HERE
+            self.verify_permission(current_user_id, "module.view")
             
             modules = self.module_repo.search(search_term, skip=skip, limit=limit)
-            total = len(modules)  # Note: This is filtered count, not total
+            total = len(modules)
             
             # Convert to responses
             module_responses = []
