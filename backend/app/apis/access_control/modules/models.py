@@ -20,6 +20,11 @@ class Module(Base):
     
     # Relationships
     updater = relationship("ExistingUser", foreign_keys=[updated_by])
+
+
     
+    # Python __repr__() is one of the magic methods that returns a printable 
+    # representation of an object in Python
+    # This method is useful for debugging and logging purposes
     def __repr__(self):
         return f"<Module(module_id={self.module_id}, module_name={self.module_name})>"

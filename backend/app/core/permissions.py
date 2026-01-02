@@ -56,6 +56,7 @@ class PermissionKey(str, Enum):
     TEAM_DELETE = "team.delete"
 
     DESIGNATION_VIEW = "designation.view"
+    DESIGNATION_VIEW_SELF = "designation.view.self"
     DESIGNATION_CREATE = "designation.create"
     DESIGNATION_UPDATE = "designation.update"
     DESIGNATION_DELETE = "designation.delete"

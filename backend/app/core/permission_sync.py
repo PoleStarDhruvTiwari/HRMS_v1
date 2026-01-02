@@ -6,10 +6,6 @@
 # Code is the source of truth. Database is a read-only mirror.
 # """
 
-
-
-
-
 # app/core/permission_sync.py
 import logging
 from typing import Dict, List, Set
