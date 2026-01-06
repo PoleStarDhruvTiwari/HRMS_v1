@@ -98,6 +98,14 @@ class PermissionKey(str, Enum):
     USER_PERMISSION_VIEW = "user_permission.view"
     USER_PERMISSION_GRANT = "user_permission.grant"
     USER_PERMISSION_REVOKE = "user_permission.revoke"
+    # =====================================================
+    # hierarchy  PERMISSIONS (Direct assignment)
+    # =====================================================
+    HIERARCHY_VIEW = "hierarchy.view"
+    HIERARCHY_CREATE = "hierarchy.create"
+    HIERARCHY_UPDATE = "hierarchy.update"
+    HIERARCHY_DELETE = "hierarchy.delete"
+    
 
     @classmethod
     def values(cls) -> list[str]:
