@@ -404,6 +404,11 @@ from app.apis.access_control.permissions.routes import router as permissions_rou
 from app.apis.access_control.user_permissions.routes import router as user_permissions_router
 from app.apis.access_control.role_permissions.routes import router as role_permissions_router
 from app.apis.hierarchy.employee_hierarchy.routes import router as hierarchy_router
+# Import and include the team hierarchy router
+from app.apis.hierarchy.team_hierarchy.routes import router as team_hierarchy_router
+
+# Register the router
+
 
 logger = logging.getLogger(__name__)
 
@@ -525,6 +530,7 @@ app.include_router(permissions_router, dependencies=protected)
 app.include_router(user_permissions_router, dependencies=protected)
 app.include_router(role_permissions_router, dependencies=protected)
 app.include_router(hierarchy_router, dependencies=protected)
+app.include_router(team_hierarchy_router, dependencies=protected)
 
 # -----------------------------
 # TEMP DEBUG (KEEP FOR NOW)
