@@ -400,12 +400,11 @@ from app.apis.organization.shifts.routers import router as shifts_router
 from app.apis.organization.teams.routers import router as teams_router
 from app.apis.organization.designations.routers import router as designations_router
 
-from app.apis.access_control.permissions.routes import router as permissions_router
-from app.apis.access_control.user_permissions.routes import router as user_permissions_router
-from app.apis.access_control.role_permissions.routes import router as role_permissions_router
-from app.apis.hierarchy.employee_hierarchy.routes import router as hierarchy_router
-# Import and include the team hierarchy router
-from app.apis.hierarchy.team_hierarchy.routes import router as team_hierarchy_router
+from backend.app.apis.access_control.permissions.routers import router as permissions_router
+from backend.app.apis.access_control.user_permissions.routers import router as user_permissions_router
+from backend.app.apis.access_control.role_permissions.routers import router as role_permissions_router
+from backend.app.apis.hierarchy.employee_hierarchy.routers import router as hierarchy_router
+from backend.app.apis.hierarchy.team_hierarchy.routers import router as team_hierarchy_router
 
 # Register the router
 

@@ -14,7 +14,7 @@ class TeamHierarchyBase(BaseModel):
             raise ValueError("Team cannot be parent of itself")
         return v
 
-
+# Schema of incoming request data  for creating hierarchy for new team.
 class NewTeamHierarchyCreate(BaseModel):
     """Schema for creating hierarchy for new team."""
     child_team_id: int = Field(..., description="New child team ID")

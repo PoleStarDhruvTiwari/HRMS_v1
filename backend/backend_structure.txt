@@ -1,0 +1,207 @@
+Folder PATH listing for volume Windows
+Volume serial number is 3A1D-3FAE
+C:.
+|   .env
+|   .env.example
+|   backend_structure.txt
+|   docker-compose.prod.yml
+|   docker-compose.yml
+|   Dockerfile
+|   README.md
+|   requirements.txt
+|   
++---app
+|   |   main.py
+|   |   test_permission_overrides.py
+|   |   test_sync.py
+|   |   __init__.py
+|   |   
+|   +---apis
+|   |   |   __init__.py
+|   |   |   
+|   |   +---access_control
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---modules
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---permissions
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routes.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---roles
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---role_permissions
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routes.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---user_permissions
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routes.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   \---__pycache__
+|   |   |           __init__.cpython-311.pyc
+|   |   |           
+|   |   +---auth
+|   |   |   |   models.py
+|   |   |   |   repositories.py
+|   |   |   |   routers.py
+|   |   |   |   schemas.py
+|   |   |   |   services.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |           
+|   |   +---employee_availability
+|   |   |   |   models.py
+|   |   |   |   repositories.py
+|   |   |   |   routers.py
+|   |   |   |   schemas.py
+|   |   |   |   services.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |           
+|   |   +---hierarchy
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---employee_hierarchy
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routes.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---team_hierarchy
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routes.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   \---__pycache__
+|   |   |           __init__.cpython-311.pyc
+|   |   |           
+|   |   +---organization
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---designations
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |           
+|   |   |   +---offices
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |           
+|   |   |   +---shifts
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |           
+|   |   |   +---teams
+|   |   |   |   |   models.py
+|   |   |   |   |   repositories.py
+|   |   |   |   |   routers.py
+|   |   |   |   |   schemas.py
+|   |   |   |   |   services.py
+|   |   |   |   |   __init__.py
+|   |   |   |           
+|   |   |   \---__pycache__
+|   |   |           __init__.cpython-311.pyc
+|   |   |           
+|   |   +---users
+|   |   |   |   models.py
+|   |   |   |   repositories.py
+|   |   |   |   routers.py
+|   |   |   |   schemas.py
+|   |   |   |   services.py
+|   |   |   |   __init__.py
+|   |   |           
+|   |   \---__pycache__
+|   |           __init__.cpython-311.pyc
+|   |           
+|   +---core
+|   |   |   base_service.py
+|   |   |   config.py
+|   |   |   constants.py
+|   |   |   events.py
+|   |   |   logging.py
+|   |   |   permissions.py
+|   |   |   permission_checker.py
+|   |   |   permission_sync.py
+|   |   |   security.py
+|   |   |   __init__.py
+|   |           
+|   +---database
+|   |   |   base.py
+|   |   |   connection.py
+|   |   |   session.py
+|   |   |   __init__.py
+|   |           
+|   +---shared
+|   |   |   exceptions.py
+|   |   |   middleware.py
+|   |   |   response_models.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---__pycache__
+|   |           exceptions.cpython-311.pyc
+|   |           middleware.cpython-311.pyc
+|   |           __init__.cpython-311.pyc
+|   |           
+|   \---__pycache__
+|           main.cpython-311.pyc
+|           __init__.cpython-311.pyc
+|           
++---docker
+|       Dockerfile
+|       gunicorn_conf.py
+|       start.sh
+|       
++---requirements
+|       base.txt
+|       development.txt
+|       production.txt
+|       
